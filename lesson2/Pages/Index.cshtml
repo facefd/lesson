@@ -1,0 +1,69 @@
+@page "/"
+@{
+    ViewData["Title"] = "Главная";
+    ViewData["Description"] = "Калькулятор и Echo — тестирование API";
+}
+
+@section Scripts {
+<script>
+    async function getServerInfo() {
+        const response = await fetch('/api/server-info');
+        const data = await response.json();
+        document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+    }
+    async function getSum() {
+        const a = document.getElementById('sumA').value;
+        const b = document.getElementById('sumB').value;
+        const response = await fetch(`/api/sum?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`);
+        const data = await response.json();
+        const el = document.getElementById('sumResult');
+        if (response.ok) { el.textContent = `Результат: ${data.result}`; el.className = 'success'; }
+        else { el.textContent = `Ошибка: ${data.error}`; el.className = 'error'; }
+    }
+    async function getDivide() {
+        const a = document.getElementById('divA').value;
+        const b = document.getElementById('divB').value;
+        const response = await fetch(`/api/divide?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`);
+        const data = await response.json();
+        const el = document.getElementById('divResult');
+        if (response.ok) { el.textContent = `Результат: ${data.result}`; el.className = 'success'; }
+        else { el.textContent = `Ошибка: ${data.error}`; el.className = 'error'; }
+    }
+    async function postEcho() {
+        const text = document.getElementById('echoText').value;
+        const response = await fetch('/api/echo', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text })
+        });
+        const data = await response.json();
+        document.getElementById('echoResult').textContent = JSON.stringify(data, null, 2);
+    }
+    window.onload = () => { getServerInfo(); };
+</script>
+}
+
+<section>
+    <h2>1. Информация о сервере</h2>
+    <button onclick="getServerInfo()">Получить информацию</button>
+    <pre id="result">Загрузка данных API...</pre>
+</section>
+<section>
+    <h2>2. Калькулятор суммы</h2>
+    <input type="number" id="sumA" placeholder="Число A" step="any">
+    <input type="number" id="sumB" placeholder="Число B" step="any">
+    <button onclick="getSum()">Вычислить</button>
+    <p id="sumResult"></p>
+</section>
+<section>
+    <h2>3. Калькулятор деления (с обработкой ошибок)</h2>
+    <input type="number" id="divA" placeholder="Число A" step="any">
+    <input type="number" id="divB" placeholder="Число B" step="any">
+    <button onclick="getDivide()">Разделить</button>
+    <p id="divResult"></p>
+</section>
+<section>
+    <h2>4. Echo (POST запрос)</h2>
+    <textarea id="echoText" placeholder="Введите текст для отправки на сервер" rows="3" style="width: 100%;"></textarea><br>
+    <button onclick="postEcho()">Отправить на сервер</button>
+    <pre id="echoResult">Результат запроса здесь...</pre>
+</section>

@@ -1,0 +1,353 @@
+@page "/Tasks"
+@model TasksModel
+@{
+    ViewData["Title"] = "Задачи";
+    var msg = TempData.Peek("Message");
+    var errMsg = TempData.Peek("Error");
+}
+
+<section>
+    <h2>Список задач</h2>
+    <p style="color: #666;">@ViewBag.PageDescription</p>
+
+    @if (msg != null)
+    {
+        <div class="alert">@msg</div>
+    }
+    @if (errMsg != null)
+    {
+        <div class="alert-error">@errMsg</div>
+    }
+
+    @* Задача 7 + 9: Фильтры и сортировка *@
+    <div style="padding: 10px; background: #e9ecef; border-radius: 4px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
+        <span>Фильтр:</span>
+        <select asp-for="@Model.FilteredCategoryId" asp-items="@(new SelectList(Model.Categories, "Id", "Name"))">
+            <option value="">— Все категории —</option>
+        </select>
+        
+        <span>Сортировка:</span>
+        <a asp-page="/Tasks" asp-route-categoryid="@Model.FilteredCategoryId" asp-route-sortby="date" 
+           class="@(Model.SortBy == "date" ? "active-filter" : "")">По дате</a> |
+        <a asp-page="/Tasks" asp-route-categoryid="@Model.FilteredCategoryId" asp-route-sortby="title" 
+           class="@(Model.SortBy == "title" ? "active-filter" : "")">По названию</a>
+
+        <button onclick="applyFilter()">Применить</button>
+        <span id="taskCountInfo" style="margin-left: auto; font-weight: bold;"></span>
+    </div>
+
+    <div style="padding: 10px; background: #e9ecef; border-radius: 4px; margin-bottom: 15px;">
+        <input type="hidden" id="currentPage" value="@Model.CurrentPage" />
+        <input type="text" id="searchInput" placeholder="Поиск по названию..." style="width: 30%;" />
+        <button onclick="applySearch()">Найти</button>
+    </div>
+
+    <h3>AJAX-форма (без перезагрузки)</h3>
+    <div style="padding: 10px; background: #f0f0f0; border-radius: 4px; margin-bottom: 15px;">
+        <input type="text" id="newTaskTitle" placeholder="Название новой задачи" style="width: 40%;">
+        <select id="newTaskCategory" style="width: 25%; padding: 8px;">
+            <option value="">— Категория —</option>
+            @foreach (var cat in Model.Categories)
+            {
+                <option value="@cat.Id">@cat.Name</option>
+            }
+        </select>
+        <button id="addTaskBtn" onclick="addTask()">Добавить (AJAX)</button>
+        <span id="ajaxTaskError" style="color: #d9534f; font-size: 0.9em; margin-left: 10px;"></span>
+    </div>
+
+    <h3>Классическая форма (с перезагрузкой, для JS-off)</h3>
+    <form method="post" style="padding: 10px; background: #e9ecef; border-radius: 4px; margin-bottom: 15px;">
+        <div asp-validation-summary="All" class="validation-summary-errors"></div>
+        
+        <div style="margin-bottom: 10px;">
+            <label asp-for="NewTask.Title" style="font-weight: bold;">Название:</label>
+            <input asp-for="NewTask.Title" placeholder="От 3 до 100 символов" style="width: 60%;" />
+            <span asp-validation-for="NewTask.Title"></span>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label asp-for="NewTask.CategoryId" style="font-weight: bold;">Категория:</label>
+            <select asp-for="NewTask.CategoryId" asp-items="@(new SelectList(Model.Categories, "Id", "Name"))">
+                <option value="">— Без категории —</option>
+            </select>
+            <span asp-validation-for="NewTask.CategoryId"></span>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label asp-for="NewTask.DueDate" style="font-weight: bold;">Дедлайн:</label>
+            <input asp-for="NewTask.DueDate" type="date" style="padding: 8px;" />
+            <span asp-validation-for="NewTask.DueDate"></span>
+        </div>
+        <button type="submit">Добавить (классическая)</button>
+    </form>
+
+    @* Пагинация *@
+    @if (Model.TotalPages > 1)
+    {
+        <nav style="margin-top: 20px; text-align: center;">
+            <span>Страница @Model.CurrentPage из @Model.TotalPages</span>
+            
+            <a asp-page="/Tasks" 
+               asp-route-categoryid="@Model.FilteredCategoryId" 
+               asp-route-sortby="@Model.SortBy"
+               asp-route-page="(Model.CurrentPage - 1)"
+               class="@(Model.CurrentPage == 1 ? "disabled-btn" : "")"
+               @(Model.CurrentPage == 1 ? "style='opacity:0.5; pointer-events:none'" : "")>← Назад</a>
+
+            @for (var i = 1; i <= Model.TotalPages; i++)
+            {
+                if (i == Model.CurrentPage)
+                {
+                    <span style="font-weight: bold; margin: 0 5px;">@i</span>
+                }
+                else
+                {
+                    <a asp-page="/Tasks" 
+                       asp-route-categoryid="@Model.FilteredCategoryId" 
+                       asp-route-sortby="@Model.SortBy"
+                       asp-route-page="@i"
+                       style="margin: 0 3px;">@i</a>
+                }
+            }
+
+            <a asp-page="/Tasks" 
+               asp-route-categoryid="@Model.FilteredCategoryId" 
+               asp-route-sortby="@Model.SortBy"
+               asp-route-page="(Model.CurrentPage + 1)"
+               class="@(Model.CurrentPage >= Model.TotalPages ? "disabled-btn" : "")"
+               @(Model.CurrentPage >= Model.TotalPages ? "style='opacity:0.5; pointer-events:none'" : "")>Далее →</a>
+        </nav>
+    }
+
+    <ul id="taskList" style="margin-top: 15px;">
+        @foreach (var task in Model.PaginatedTasks)
+        {
+            <partial name="_TaskItem" model="task" />
+        }
+    </ul>
+    @if (!Model.PaginatedTasks.Any())
+    {
+        <div id="emptyMessage" class="empty-message">Задач пока нет, добавьте первую!</div>
+    }
+</section>
+
+<style>
+    .task-done-item { opacity: 0.6; background: #f9f9f9 !important; }
+    .validation-summary-errors { color: #d9534f; font-weight: bold; margin-bottom: 10px; }
+    .active-filter { background: #007bff; color: white; padding: 2px 8px; border-radius: 3px; text-decoration: none; }
+    .disabled-btn { opacity: 0.5; pointer-events: none; }
+    .loading-btn { background: #6c757d; cursor: not-allowed; }
+</style>
+
+@section Scripts {
+<script>
+    // Задача 11: Единая обёртка apiRequest()
+    let abortController = null;
+    
+    async function apiRequest(url, options = {}) {
+        // Отменяем предыдущий запрос (Задача 10)
+        if (abortController) abortController.abort();
+        abortController = new AbortController();
+        const signal = abortController.signal;
+
+        try {
+            const response = await fetch(url, { ...options, signal });
+            const data = await response.json().catch(() => null);
+
+            if (!response.ok) {
+                const error = data?.error || { message: "Неизвестная ошибка сервера" };
+                throw new Error(error.message);
+            }
+
+            return data;
+        } catch (err) {
+            if (err.name === "AbortError") return null;
+            showErrorToast(err.message);
+            throw err;
+        }
+    }
+
+    function showErrorToast(message) {
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed; bottom: 20px; right: 20px; 
+            background: #dc3545; color: white; padding: 12px 20px;
+            border-radius: 4px; z-index: 1000;
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Задача 9: Индикатор загрузки для кнопок
+    async function withLoading(button, callback) {
+        button.disabled = true;
+        button.classList.add('loading-btn');
+        button.textContent = '...';
+        try {
+            await callback();
+        } finally {
+            button.disabled = false;
+            button.classList.remove('loading-btn');
+            button.textContent = button.dataset.originalText || 'Добавить (AJAX)';
+        }
+    }
+
+    // Задача 8: Пагинация и фильтрация через API
+    async function loadTasks() {
+        const categoryId = document.querySelector('[asp-for="FilteredCategoryId"]').value || '';
+        const sortBy = document.querySelector('.active-filter')?.textContent.trim() || 'date';
+        const page = document.getElementById('currentPage').value;
+        const search = document.getElementById('searchInput').value;
+        
+        const params = new URLSearchParams({
+            categoryId,
+            sortBy,
+            page,
+            pageSize: '5'
+        });
+        if (search) params.append('search', search);
+        
+        const url = `/api/tasks?${params}`;
+        try {
+            const response = await apiRequest(url);
+            const list = document.getElementById('taskList');
+            list.innerHTML = '';
+            const emptyMsg = document.getElementById('emptyMessage');
+            
+            if (response.items.length === 0) {
+                if (!emptyMsg) {
+                    const m = document.createElement('div');
+                    m.id = 'emptyMessage'; m.className = 'empty-message';
+                    m.textContent = 'Задач пока нет, добавьте первую!';
+                    list.parentNode.insertBefore(m, list);
+                } else { emptyMsg.style.display = 'block'; }
+            } else {
+                if (emptyMsg) emptyMsg.style.display = 'none';
+            }
+            
+            response.items.forEach(task => {
+                const li = document.createElement('li');
+                li.id = 'task-' + task.id;
+                li.className = task.isDone ? 'task-done-item' : '';
+                const categoryBadge = task.categoryName ? 
+                    '<span style="background:#e0e7ff;color:#3730a3;padding:1px 6px;border-radius:3px;font-size:0.8em;margin-left:6px;">' + task.categoryName + '</span>' : '';
+                const dueDateBadge = task.dueDate ? 
+                    '<span style="background:#fff3cd;color:#856404;padding:1px 6px;border-radius:3px;font-size:0.8em;margin-left:6px;">📅 ' + task.dueDate.substring(0,10) + '</span>' : '';
+                li.innerHTML = '<input type="checkbox" ' + (task.isDone ? 'checked' : '') +
+                    ' onchange="toggleTask(' + task.id + ')">' +
+                    '<div style="flex-grow:1;"><span class="' + (task.isDone ? 'task-done' : '') + '">' + task.title + '</span>' + categoryBadge + dueDateBadge + '</div>' +
+                    '<a href="/Tasks/Edit/' + task.id + '" style="color:#007bff;text-decoration:none;font-size:0.85em;padding:4px 8px;border:1px solid #007bff;border-radius:3px;" title="Редактировать">✎</a>' +
+                    '<button class="delete-btn" onclick="deleteTask(' + task.id + ')" title="Удалить через AJAX">✕</button>';
+                list.appendChild(li);
+            });
+            
+            // Обновляем информацию о количестве задач
+            document.getElementById('taskCountInfo').textContent = 
+                `Всего: ${response.totalCount} | Страниц: ${response.totalPages}`;
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function addTask() {
+        const titleInput = document.getElementById('newTaskTitle');
+        const btn = document.getElementById('addTaskBtn');
+        const errorSpan = document.getElementById('ajaxTaskError');
+        
+        // Задача 9: Блокировка кнопки на время запроса
+        await withLoading(btn, async () => {
+            const errors = validateTaskTitle(titleInput.value);
+            if (errors.length > 0) { 
+                errorSpan.textContent = errors.join(', '); 
+                return;
+            }
+            errorSpan.textContent = '';
+
+            const categorySelect = document.getElementById('newTaskCategory');
+            const body = { title: titleInput.value.trim(), categoryId: categorySelect.value ? parseInt(categorySelect.value) : null };
+
+            try {
+                const result = await apiRequest('/api/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Api-Key': 'lesson2-secret' },
+                    body: JSON.stringify(body)
+                });
+
+                // Задача 7: Location header не нужен клиенту, но мы можем использовать его для редиректа
+                titleInput.value = ''; 
+                categorySelect.value = '';
+                errorSpan.textContent = '';
+                await loadTasks(); 
+            } catch (err) {
+                errorSpan.textContent = err.message;
+            }
+        });
+    }
+    
+    async function deleteTask(id) {
+        const btn = event.target;
+        await withLoading(btn, async () => {
+            try {
+                await apiRequest(`/api/tasks/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Api-Key': 'lesson2-secret' }
+                });
+                await loadTasks();
+            } catch (err) {
+                showErrorToast(err.message);
+            }
+        });
+    }
+    
+    async function toggleTask(id) {
+        const btn = event.target;
+        await withLoading(btn, async () => {
+            try {
+                const result = await apiRequest(`/api/tasks/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Api-Key': 'lesson2-secret' },
+                    body: JSON.stringify({ isDone: true })
+                });
+                await loadTasks();
+            } catch (err) {
+                showErrorToast(err.message);
+            }
+        });
+    }
+    
+    function applyFilter() {
+        const catSelect = document.querySelector('[asp-for="FilteredCategoryId"]');
+        const sortBy = document.querySelector('.active-filter')?.textContent.trim() || 'date';
+        const page = document.getElementById('currentPage').value;
+        const search = document.getElementById('searchInput').value;
+        let url = '/Tasks?categoryId=' + (catSelect.value || '') + '&sortBy=' + sortBy + '&page=' + page;
+        if (search) url += '&search=' + encodeURIComponent(search);
+        window.location.href = url;
+    }
+
+    function applySearch() {
+        const search = document.getElementById('searchInput').value;
+        const catSelect = document.querySelector('[asp-for="FilteredCategoryId"]');
+        const sortBy = document.querySelector('.active-filter')?.textContent.trim() || 'date';
+        const page = document.getElementById('currentPage').value;
+        let url = '/Tasks?categoryId=' + (catSelect.value || '') + '&sortBy=' + sortBy + '&page=' + page;
+        if (search) url += '&search=' + encodeURIComponent(search);
+        window.location.href = url;
+    }
+
+    // Задача 6: Валидация на клиенте
+    function validateTaskTitle(title) {
+        var errors = [];
+        if (!title || title.trim().length === 0) errors.push('Название обязательно');
+        else if (title.trim().length < 3) errors.push('Минимум 3 символа');
+        else if (title.toLowerCase().includes('тест')) errors.push('Название не должно содержать слово "тест"');
+        return errors;
+    }
+
+    // Инициализация
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('addTaskBtn').dataset.originalText = 'Добавить (AJAX)';
+        loadTasks();
+    });
+</script>
+}

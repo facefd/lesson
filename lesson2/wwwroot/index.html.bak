@@ -1,0 +1,273 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 1 WebServer Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+            line-height: 1.6;
+        }
+
+        section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .error {
+            color: #d9534f;
+            font-weight: bold;
+        }
+
+        .success {
+            color: #5cb85c;
+            font-weight: bold;
+        }
+
+        .task-done {
+            text-decoration: line-through;
+            color: #888;
+        }
+
+        input, button, textarea {
+            margin: 5px 0;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+            button:hover {
+                background-color: #0056b3;
+            }
+
+            button.delete-btn {
+                background-color: #dc3545;
+                margin-left: auto;
+            }
+
+                button.delete-btn:hover {
+                    background-color: #c82333;
+                }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 8px 0;
+            padding: 8px;
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Тестирование API (Все задачи)</h1>
+
+    <!-- Задача 4 -->
+    <section>
+        <h2>1. Информация о сервере</h2>
+        <button onclick="getServerInfo()">Получить информацию</button>
+        <pre id="result">Нажмите кнопку выше...</pre>
+    </section>
+
+    <!-- Задача 5 -->
+    <section>
+        <h2>2. Калькулятор суммы</h2>
+        <input type="number" id="sumA" placeholder="Число A" step="any">
+        <input type="number" id="sumB" placeholder="Число B" step="any">
+        <button onclick="getSum()">Посчитать</button>
+        <p id="sumResult"></p>
+    </section>
+
+    <!-- Задача 7 -->
+    <section>
+        <h2>3. Калькулятор деления (с обработкой ошибок)</h2>
+        <input type="number" id="divA" placeholder="Число A" step="any">
+        <input type="number" id="divB" placeholder="Число B" step="any">
+        <button onclick="getDivide()">Поделить</button>
+        <p id="divResult"></p>
+    </section>
+
+    <!-- Задача 6 -->
+    <section>
+        <h2>4. Echo (POST запрос)</h2>
+        <textarea id="echoText" placeholder="Введите текст для отправки на сервер" rows="3" style="width: 100%;"></textarea><br>
+        <button onclick="postEcho()">Отправить на сервер</button>
+        <pre id="echoResult">Результат появится здесь...</pre>
+    </section>
+
+    <!-- Задачи 8, 9, 10 + Домашнее задание -->
+    <section>
+        <h2>5. Менеджер задач (To-Do List)</h2>
+        <button onclick="loadTasks()">Обновить список задач</button>
+        <div style="margin-top: 15px; padding: 10px; background: #e9ecef; border-radius: 4px;">
+            <input type="text" id="newTaskTitle" placeholder="Название новой задачи" style="width: 60%;">
+            <button onclick="addTask()">Добавить задачу</button>
+        </div>
+        <div style="margin-top: 15px; padding: 10px; background: #e9ecef; border-radius: 4px;">
+            <input type="number" id="taskIdInput" placeholder="ID Р·Р°РґР°С‡Рё" style="width: 30%;">
+            <button onclick="findTask()">РќР°Р№С‚Рё Р·Р°РґР°С‡Сѓ</button>
+            <pre id="taskResult" style="margin-top: 10px;">Р РµР·СѓР»СЊС‚Р°С‚ РїРѕРёСЃРєР° РїРѕСЏРІРёС‚СЃСЏ Р·РґРµСЃСЊ...</pre>
+        </div>
+        <ul id="taskList" style="margin-top: 15px;"></ul>
+    </section>
+
+    <script>
+        // Задача 4: Получение информации о сервере
+        async function getServerInfo() {
+            const response = await fetch('/api/server-info');
+            const data = await response.json();
+            document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Задача 5: Сумма
+        async function getSum() {
+            const a = document.getElementById('sumA').value;
+            const b = document.getElementById('sumB').value;
+            const response = await fetch(`/api/sum?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`);
+            const data = await response.json();
+            const el = document.getElementById('sumResult');
+            if (response.ok) {
+                el.textContent = `Результат: ${data.result}`;
+                el.className = 'success';
+            } else {
+                el.textContent = `Ошибка: ${data.error}`;
+                el.className = 'error';
+            }
+        }
+
+        // Задача 7: Деление с обработкой ошибок
+        async function getDivide() {
+            const a = document.getElementById('divA').value;
+            const b = document.getElementById('divB').value;
+            const response = await fetch(`/api/divide?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`);
+            const data = await response.json();
+            const el = document.getElementById('divResult');
+            if (response.ok) {
+                el.textContent = `Результат: ${data.result}`;
+                el.className = 'success';
+            } else {
+                el.textContent = `Ошибка: ${data.error}`;
+                el.className = 'error'; // Красный текст при ошибке
+            }
+        }
+
+        // Задача 6: POST запрос
+        async function postEcho() {
+            const text = document.getElementById('echoText').value;
+            const response = await fetch('/api/echo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Api-Key': 'lesson2-secret' },
+                body: JSON.stringify({ text: text })
+            });
+            const data = await response.json();
+            document.getElementById('echoResult').textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Задача 8: Загрузка списка задач
+        async function loadTasks() {
+            const response = await fetch('/api/tasks');
+            const tasks = await response.json();
+            const list = document.getElementById('taskList');
+            list.innerHTML = '';
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                        <input type="checkbox" ${task.isDone ? 'checked' : ''} onchange="toggleTask(${task.id})" title="Отметить как выполненную">
+                        <span class="${task.isDone ? 'task-done' : ''}">${task.title}</span>
+                        <button class="delete-btn" onclick="deleteTask(${task.id})">Удалить</button>
+                    `;
+                list.appendChild(li);
+            });
+        }
+
+        // Задача 9: Добавление задачи
+        async function addTask() {
+            const titleInput = document.getElementById('newTaskTitle');
+            const title = titleInput.value;
+
+            const response = await fetch('/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Api-Key': 'lesson2-secret' },
+                body: JSON.stringify({ title: title })
+            });
+
+            if (response.ok) {
+                titleInput.value = ''; // Очистить поле
+                await loadTasks(); // Перезапрашиваем список с сервера, чтобы убедиться, что данные сохранились
+            } else {
+                const data = await response.json();
+                alert(`Ошибка: ${data.error}`);
+            }
+        }
+
+        // Задача 10: Удаление задачи
+        async function deleteTask(id) {
+            const response = await fetch(`/api/tasks/${id}`, { method: 'DELETE', headers: { 'X-Api-Key': 'lesson2-secret' } });
+            if (response.ok) {
+                await loadTasks();
+            } else {
+                const data = await response.json();
+                alert(`Ошибка: ${data.error}`);
+            }
+        }
+
+        // Домашнее задание: Переключение статуса (PUT)
+        async function toggleTask(id) {
+            const response = await fetch(`/api/tasks/${id}`, { method: 'PUT' });
+            if (response.ok) {
+                await loadTasks();
+            }
+        }
+
+        // Финальный тест №1: Автозагрузка при открытии страницы
+        async function findTask() {
+            const id = document.getElementById('taskIdInput').value;
+            if (!id) { alert('Р’РІРµРґРёС‚Рµ ID Р·Р°РґР°С‡Рё'); return; }
+            const response = await fetch('/api/tasks/' + id);
+            const data = await response.json();
+            const el = document.getElementById('taskResult');
+            if (response.ok) { el.textContent = JSON.stringify(data, null, 2); }
+            else { el.textContent = 'РћС€РёР±РєР°: ' + data.error; }
+        }
+
+        window.onload = () => {
+            getServerInfo();
+            loadTasks();
+        };
+    </script>
+</body>
+</html>

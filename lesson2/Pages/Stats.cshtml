@@ -1,0 +1,63 @@
+@page "/Stats"
+@model StatsModel
+@{
+    ViewData["Title"] = "Статистика";
+    ViewData["Description"] = "Статистика задач — всего, выполнено, невыполнено";
+    var msg = TempData.Peek("Message");
+}
+
+<section>
+    <h2>Статистика задач</h2>
+
+    @if (msg != null)
+    {
+        <div class="alert">@msg</div>
+    }
+
+    @* Задача 7: рефакторинг из ViewBag (Задача 6) в строго типизированную модель.
+       Преимущество: Model.TotalCount проверяется компилятором (опечатка Model.TotlCount
+       будет ошибкой сборки), а ViewBag.TotlCount молча вернёт null в runtime. *@
+    <table class="stats-table">
+        <tr>
+            <td>Всего задач</td>
+            <td class="stats-number">@Model.TotalCount</td>
+        </tr>
+        <tr>
+            <td>Выполнено</td>
+            <td class="stats-number" style="color: #5cb85c;">@Model.DoneCount</td>
+        </tr>
+        <tr>
+            <td>Не выполнено</td>
+            <td class="stats-number" style="color: #d9534f;">@Model.UndoneCount</td>
+        </tr>
+    </table>
+
+    @* Задача 8: Статистика по категориям *@
+    <h3 style="margin-top: 30px;">Задачи по категориям</h3>
+    <table class="stats-table">
+        <thead>
+            <tr style="background:#f5f5f5;">
+                <th style="padding:10px;border:1px solid #ddd;">Категория</th>
+                <th style="padding:10px;border:1px solid #ddd;">Всего</th>
+                <th style="padding:10px;border:1px solid #ddd;">Выполнено</th>
+                <th style="padding:10px;border:1px solid #ddd;">Не выполнено</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var stat in Model.ByCategory)
+            {
+                <tr>
+                    <td style="padding:10px;border:1px solid #ddd;">@stat.CategoryName</td>
+                    <td style="padding:10px;border:1px solid #ddd;">@stat.Count</td>
+                    <td style="padding:10px;border:1px solid #ddd;color:#5cb85c;">@stat.DoneCount</td>
+                    <td style="padding:10px;border:1px solid #ddd;color:#d9534f;">@stat.UndoneCount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @* ДЗ: кнопка "Обновить статистику" (классическая форма, OnPost без параметров) *@
+    <form method="post">
+        <button type="submit">Обновить статистику</button>
+    </form>
+</section>
