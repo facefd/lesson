@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using lesson2.Models;
-using static lesson2.Pages.TasksModel;
 
 namespace lesson2.Pages;
 
@@ -15,68 +14,53 @@ public class TasksModel : PageModel
 
     public TasksModel(TaskDbContext db) => _db = db;
 
-    // Параметры из query string (Задачи 7, 9, 10, ДЗ)
     [BindProperty(SupportsGet = true)]
     public int? FilteredCategoryId { get; set; }
 
     [BindProperty(SupportsGet = true)]
-    public string SortBy { get; set; } = "date"; // "date" или "title"
+    public string SortBy { get; set; } = "date";
 
     [BindProperty(SupportsGet = true)]
-    public int Page { get; set; } = 1;
+    public new int Page { get; set; } = 1;
 
     [BindProperty(SupportsGet = true)]
-    public string? Search { get; set; } // ДЗ: текстовый поиск по названию
+    public string? Search { get; set; }
 
-    public const int PageSize = 5; // Задача 9: пагинация
+    public const int PageSize = 5;
 
     public List<Category> Categories { get; set; } = new();
     public List<TaskItem> PaginatedTasks { get; set; } = new();
     public int TotalCount { get; set; }
     public int TotalPages { get; set; }
 
+    public int CurrentPage => Page;
+
     [BindProperty]
     public TaskItem NewTask { get; set; } = new();
 
     public async Task OnGet()
     {
-        // Загружаем категории для выпадающих списков (Задача 5)
         Categories = await _db.Categories.ToListAsync();
 
-        // Задача 6 + 7: Build query с Include для загрузки Category и фильтрацией
         var query = _db.Tasks.Include(t => t.Category).AsQueryable();
 
-        // Задача 7: Фильтрация по категории
         if (FilteredCategoryId.HasValue)
-        {
             query = query.Where(t => t.CategoryId == FilteredCategoryId);
-        }
 
-        // ДЗ: Поиск по названию
         if (!string.IsNullOrWhiteSpace(Search))
-        {
             query = query.Where(t => t.Title.Contains(Search));
-        }
 
-        // Подсчёт общего количества для пагинации
         TotalCount = await query.CountAsync();
         TotalPages = (int)Math.Ceiling(TotalCount / (double)PageSize);
 
-        // Ограничиваем CurrentPage диапазоном
         if (Page < 1) Page = 1;
         if (Page > TotalPages && TotalCount > 0) Page = TotalPages;
 
-        // Задача 10: Сортировка ПОСЛЕ фильтрации, ПЕРЕД пагинацией
         if (SortBy == "title")
-        {
             query = query.OrderBy(t => t.Title);
-        }
-        else // default: date
-        {
+        else
             query = query.OrderByDescending(t => t.CreatedAt);
-        }
 
-        // Задача 9: Пагинация после фильтрации и сортировки
         PaginatedTasks = await query
             .Skip((Page - 1) * PageSize)
             .Take(PageSize)
@@ -104,12 +88,7 @@ public class TasksModel : PageModel
         _db.Tasks.Add(newTask);
         await _db.SaveChangesAsync();
         TempData["Message"] = "Задача успешно добавлена!";
-        return RedirectToPage("/Tasks", new { 
-            categoryId = FilteredCategoryId, 
-            sortBy = SortBy, 
-            page = Page,
-            search = Search
-        });
+        return RedirectToPage("/Tasks", new { categoryId = FilteredCategoryId, sortBy = SortBy, page = Page, search = Search });
     }
 
     public async Task<IActionResult> OnPostDelete(int id)
@@ -121,11 +100,6 @@ public class TasksModel : PageModel
             await _db.SaveChangesAsync();
             TempData["Message"] = $"Задача №{id} удалена";
         }
-        return RedirectToPage("/Tasks", new { 
-            categoryId = FilteredCategoryId, 
-            sortBy = SortBy, 
-            page = Page,
-            search = Search
-        });
+        return RedirectToPage("/Tasks", new { categoryId = FilteredCategoryId, sortBy = SortBy, page = Page, search = Search });
     }
 }

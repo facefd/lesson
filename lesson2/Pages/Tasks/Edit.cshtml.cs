@@ -20,7 +20,7 @@ public class EditModel : PageModel
     public string SortBy { get; set; } = "date";
 
     [BindProperty(SupportsGet = true)]
-    public int Page { get; set; } = 1;
+    public new int Page { get; set; } = 1;
 
     public List<Category> Categories { get; set; } = new();
 
@@ -29,7 +29,6 @@ public class EditModel : PageModel
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
-        // Загружаем категории для select
         Categories = await _db.Categories.ToListAsync();
 
         var task = await _db.Tasks
@@ -55,7 +54,6 @@ public class EditModel : PageModel
             return Page();
         }
 
-        // Бизнес-правило: нельзя отметить выполненной без названия
         if (Task.IsDone && string.IsNullOrWhiteSpace(Task.Title.Trim()))
         {
             ModelState.AddModelError("", "Нельзя отметить выполненной задачу без названия");
@@ -77,10 +75,6 @@ public class EditModel : PageModel
         await _db.SaveChangesAsync();
 
         TempData["Message"] = "Задача обновлена!";
-        return RedirectToPage("/Tasks", new { 
-            categoryId = FilteredCategoryId, 
-            sortBy = SortBy, 
-            page = Page 
-        });
+        return RedirectToPage("/Tasks", new { categoryId = FilteredCategoryId, sortBy = SortBy, page = Page });
     }
 }

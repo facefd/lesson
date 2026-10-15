@@ -12,25 +12,21 @@ public class StatsModel : PageModel
     public int TotalCount { get; set; }
     public int DoneCount { get; set; }
     public int UndoneCount { get; set; }
-
-    // Задача 8: Группировка задач по категориям
     public List<CategoryStatViewModel> ByCategory { get; set; } = new();
 
     public async Task OnGet()
     {
-        // Общая статистика
         TotalCount = await _db.Tasks.CountAsync();
         DoneCount = await _db.Tasks.CountAsync(t => t.IsDone);
         UndoneCount = TotalCount - DoneCount;
 
-        // Задача 8: Группировка по категориям
         ByCategory = await _db.Tasks
-            .Where(t => t.Category != null) // только задачи с категорией
+            .Where(t => t.Category != null)
             .GroupBy(t => new { t.Category.Name, t.CategoryId })
             .Select(g => new CategoryStatViewModel
             {
                 CategoryName = g.Key.Name,
-                CategoryId = g.Key.CategoryId,
+                CategoryId = g.Key.CategoryId ?? 0,
                 Count = g.Count(),
                 DoneCount = g.Count(t => t.IsDone),
                 UndoneCount = g.Count(t => !t.IsDone)

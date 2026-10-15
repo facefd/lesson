@@ -2,7 +2,7 @@
 @model EditModel
 @{
     ViewData["Title"] = "Редактирование задачи";
-    ViewData["Description"] = "Изменение названия, статуса, категории и дедлайна";
+    ViewData["Description"] = "Изменение задачи";
 }
 
 <section>
@@ -18,38 +18,39 @@
     <form method="post">
         <input type="hidden" asp-for="Task.Id" />
 
-        <div style="margin-bottom: 15px;">
-            <label asp-for="Task.Title" style="font-weight: bold; display: block; margin-bottom: 5px;">Название задачи</label>
-            <input asp-for="Task.Title" style="width: 100%; padding: 8px;" />
+        <div class="form-group">
+            <label asp-for="Task.Title">Название задачи</label>
+            <input asp-for="Task.Title" />
             <span asp-validation-for="Task.Title"></span>
         </div>
 
-        <div style="margin-bottom: 15px;">
-            <label style="font-weight: bold; display: flex; align-items: center; gap: 8px;">
-                <input asp-for="Task.IsDone" type="checkbox" />
+        <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input asp-for="Task.IsDone" type="checkbox" style="width: 18px; height: 18px; accent-color: var(--primary);" />
                 Выполнено
             </label>
-            <span asp-validation-for="Task.IsDone"></span>
         </div>
 
-        <div style="margin-bottom: 15px;">
-            <label asp-for="Task.CategoryId" style="font-weight: bold; display: block; margin-bottom: 5px;">Категория</label>
-            <select asp-for="Task.CategoryId" asp-items="@(new SelectList(Model.Categories, "Id", "Name"))">
-                <option value="">— Без категории —</option>
-            </select>
-            <span asp-validation-for="Task.CategoryId"></span>
+        <div class="form-row">
+            <div class="form-group">
+                <label asp-for="Task.CategoryId">Категория</label>
+                <select asp-for="Task.CategoryId" asp-items="@(new SelectList(Model.Categories, "Id", "Name"))">
+                    <option value="">Без категории</option>
+                </select>
+                <span asp-validation-for="Task.CategoryId"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Task.DueDate">Дедлайн</label>
+                <input asp-for="Task.DueDate" type="date" />
+                <span asp-validation-for="Task.DueDate"></span>
+            </div>
         </div>
 
-        <div style="margin-bottom: 15px;">
-            <label asp-for="Task.DueDate" style="font-weight: bold; display: block; margin-bottom: 5px;">Дедлайн</label>
-            <input asp-for="Task.DueDate" type="date" style="width: 100%; padding: 8px;" />
-            <span asp-validation-for="Task.DueDate"></span>
-        </div>
-
-        <div style="margin-top: 20px; display: flex; gap: 10px;">
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
             <button type="submit">Сохранить</button>
             <a href="/Tasks?categoryId=@(Model.FilteredCategoryId ?? (int?)null)&sortBy=@Model.SortBy&page=@Model.Page" 
-               style="padding: 10px 20px; display: inline-block; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">Отмена</a>
+               class="btn btn-secondary">Отмена</a>
         </div>
     </form>
 </section>
@@ -59,7 +60,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.validate/1.19.5/jquery.validate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
 <script>
-    // Задача 9: Индикатор загрузки для кнопки сохранения
     document.querySelector('form').addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = document.querySelector('button[type="submit"]');
@@ -68,12 +68,12 @@
         
         try {
             const formData = new FormData(this);
-            const title = formData.get('Task.Title');
-            const categoryId = formData.get('Task.CategoryId');
-            const isDone = formData.get('Task.IsDone') === 'true';
-            const dueDate = formData.get('Task.DueDate');
-
-            const body = { title, categoryId: categoryId ? parseInt(categoryId) : null, isDone, dueDate };
+            const body = { 
+                title: formData.get('Task.Title'), 
+                categoryId: formData.get('Task.CategoryId') ? parseInt(formData.get('Task.CategoryId')) : null, 
+                isDone: formData.get('Task.IsDone') === 'true', 
+                dueDate: formData.get('Task.DueDate') 
+            };
             
             const response = await fetch(`/api/tasks/${formData.get('Task.Id')}`, {
                 method: 'PUT',

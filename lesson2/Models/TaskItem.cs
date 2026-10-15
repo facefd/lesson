@@ -17,11 +17,9 @@ namespace lesson2.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        // ДЗ занятия 5 + урок 6: поле CategoryId и навигация (урок 8)
         public int? CategoryId { get; set; }
         public Category? Category { get; set; }
 
-        // ДЗ занятия 7: дедлайн
         [Display(Name = "Дедлайн")]
         [DataType(DataType.Date)]
         [MustBeFutureOrToday(ErrorMessage = "Дата дедлайна не может быть в прошлом")]

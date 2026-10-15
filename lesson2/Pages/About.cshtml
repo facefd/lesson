@@ -2,33 +2,32 @@
 @model AboutModel
 @{
     ViewData["Title"] = "О сервере";
-    ViewData["Description"] = "Информация о сервере — имя, версия, время запуска";
+    ViewData["Description"] = "Информация о сервере";
 }
 
 <section>
     <h2>О сервере</h2>
-    <p>Информация о текущем сервере, полученная полностью на стороне сервера через Razor и C# в OnGet().</p>
 
-    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-        <tr style="background: #f5f5f5;">
-            <td style="padding: 10px; font-weight: bold; border: 1px solid #ddd;">Имя сервера</td>
-            <td style="padding: 10px; border: 1px solid #ddd;">@Model.ServerName</td>
+    <table>
+        <tr>
+            <td style="width: 40%; font-weight: 600;">Имя сервера</td>
+            <td>@Model.ServerName</td>
         </tr>
         <tr>
-            <td style="padding: 10px; font-weight: bold; border: 1px solid #ddd;">Версия</td>
-            <td style="padding: 10px; border: 1px solid #ddd;">@Model.Version</td>
-        </tr>
-        <tr style="background: #f5f5f5;">
-            <td style="padding: 10px; font-weight: bold; border: 1px solid #ddd;">Время запуска сервера</td>
-            <td style="padding: 10px; border: 1px solid #ddd;">@Model.StartTime</td>
+            <td style="font-weight: 600;">Версия</td>
+            <td><span class="badge badge-category">@Model.Version</span></td>
         </tr>
         <tr>
-            <td style="padding: 10px; font-weight: bold; border: 1px solid #ddd;">Текущее время</td>
-            <td style="padding: 10px; border: 1px solid #ddd;">@DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")</td>
+            <td style="font-weight: 600;">Время запуска</td>
+            <td>@Model.StartTime</td>
+        </tr>
+        <tr>
+            <td style="font-weight: 600;">Текущее время</td>
+            <td>@DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")</td>
         </tr>
     </table>
 
-    <p style="margin-top: 20px; color: #666;">
-        Эта информация отрендерена на сервере без единого AJAX-запроса.
+    <p style="margin-top: 20px; color: var(--text-secondary); font-size: 0.9em;">
+        Информация отрендерена на сервере без AJAX-запросов.
     </p>
 </section>

@@ -2,7 +2,7 @@
 @model StatsModel
 @{
     ViewData["Title"] = "Статистика";
-    ViewData["Description"] = "Статистика задач — всего, выполнено, невыполнено";
+    ViewData["Description"] = "Обзор задач и категорий";
     var msg = TempData.Peek("Message");
 }
 
@@ -14,50 +14,45 @@
         <div class="alert">@msg</div>
     }
 
-    @* Задача 7: рефакторинг из ViewBag (Задача 6) в строго типизированную модель.
-       Преимущество: Model.TotalCount проверяется компилятором (опечатка Model.TotlCount
-       будет ошибкой сборки), а ViewBag.TotlCount молча вернёт null в runtime. *@
-    <table class="stats-table">
-        <tr>
-            <td>Всего задач</td>
-            <td class="stats-number">@Model.TotalCount</td>
-        </tr>
-        <tr>
-            <td>Выполнено</td>
-            <td class="stats-number" style="color: #5cb85c;">@Model.DoneCount</td>
-        </tr>
-        <tr>
-            <td>Не выполнено</td>
-            <td class="stats-number" style="color: #d9534f;">@Model.UndoneCount</td>
-        </tr>
-    </table>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">@Model.TotalCount</div>
+            <div class="stat-label">Всего задач</div>
+        </div>
+        <div class="stat-card done">
+            <div class="stat-number">@Model.DoneCount</div>
+            <div class="stat-label">Выполнено</div>
+        </div>
+        <div class="stat-card undone">
+            <div class="stat-number">@Model.UndoneCount</div>
+            <div class="stat-label">Не выполнено</div>
+        </div>
+    </div>
 
-    @* Задача 8: Статистика по категориям *@
-    <h3 style="margin-top: 30px;">Задачи по категориям</h3>
-    <table class="stats-table">
+    <h3>Задачи по категориям</h3>
+    <table>
         <thead>
-            <tr style="background:#f5f5f5;">
-                <th style="padding:10px;border:1px solid #ddd;">Категория</th>
-                <th style="padding:10px;border:1px solid #ddd;">Всего</th>
-                <th style="padding:10px;border:1px solid #ddd;">Выполнено</th>
-                <th style="padding:10px;border:1px solid #ddd;">Не выполнено</th>
+            <tr>
+                <th>Категория</th>
+                <th>Всего</th>
+                <th>Выполнено</th>
+                <th>Не выполнено</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var stat in Model.ByCategory)
             {
                 <tr>
-                    <td style="padding:10px;border:1px solid #ddd;">@stat.CategoryName</td>
-                    <td style="padding:10px;border:1px solid #ddd;">@stat.Count</td>
-                    <td style="padding:10px;border:1px solid #ddd;color:#5cb85c;">@stat.DoneCount</td>
-                    <td style="padding:10px;border:1px solid #ddd;color:#d9534f;">@stat.UndoneCount</td>
+                    <td><strong>@stat.CategoryName</strong></td>
+                    <td><span class="badge badge-category">@stat.Count</span></td>
+                    <td><span class="badge badge-success">@stat.DoneCount</span></td>
+                    <td><span class="badge badge-danger">@stat.UndoneCount</span></td>
                 </tr>
             }
         </tbody>
     </table>
 
-    @* ДЗ: кнопка "Обновить статистику" (классическая форма, OnPost без параметров) *@
-    <form method="post">
+    <form method="post" style="margin-top: 20px;">
         <button type="submit">Обновить статистику</button>
     </form>
 </section>

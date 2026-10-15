@@ -4,16 +4,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace lesson2.Migrations
 {
-    /// <summary>
-    /// Вторая миграция: добавление колонки CreatedAt к таблице Tasks.
-    /// Существующие задачи не потеряются — у них будет значение NULL или 
-    /// по умолчанию (CURRENT_TIMESTAMP из таблицы).
-    /// </summary>
     public partial class AddCreatedAt : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Добавляем колонку CreatedAt с дефолтным значением CURRENT_TIMESTAMP
             migrationBuilder.AddColumn<DateTime>(
                 name: "CreatedAt",
                 table: "Tasks",
@@ -24,10 +18,7 @@ namespace lesson2.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            // Удаление колонки при откате миграции
-            migrationBuilder.DropColumn(
-                name: "CreatedAt",
-                table: "Tasks");
+            migrationBuilder.DropColumn(name: "CreatedAt", table: "Tasks");
         }
     }
 }

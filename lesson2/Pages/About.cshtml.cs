@@ -8,7 +8,7 @@ public class AboutModel : PageModel
 
     public void OnGet()
     {
-        ServerName = "Lesson1.WebServer";
+        ServerName = "lesson";
         Version = "1.0";
         StartTime = System.Diagnostics.Process.GetCurrentProcess().StartTime.ToString("yyyy-MM-dd HH:mm:ss");
     }

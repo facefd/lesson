@@ -2,12 +2,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace lesson2.Validators;
 
-// Задача 5: собственный атрибут валидации — запрещённые слова
 public class NoForbiddenWordsAttribute : ValidationAttribute
 {
     private readonly string[] _forbiddenWords = { "тест", "тестовый", "check" };
 
-    protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+    protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
     {
         if (value is string str && !string.IsNullOrWhiteSpace(str))
         {
@@ -20,6 +19,6 @@ public class NoForbiddenWordsAttribute : ValidationAttribute
                 }
             }
         }
-        return ValidationResult.Success;
+        return ValidationResult.Success!;
     }
 }

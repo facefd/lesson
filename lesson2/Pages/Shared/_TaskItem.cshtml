@@ -1,23 +1,25 @@
 @model TaskItem
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 <li id="task-@Model.Id" class="@(Model.IsDone ? "task-done-item" : "")">
-    <input type="checkbox" @(Model.IsDone ? "checked" : "") onchange="toggleTask(@Model.Id)">
+    <div class="checkbox-wrapper">
+        <input type="checkbox" @(Model.IsDone ? "checked" : "") onchange="toggleTask(@Model.Id)">
+    </div>
     <div style="flex-grow:1;">
         <span class="@(Model.IsDone ? "task-done" : "")">@Model.Title</span>
-        @if (!string.IsNullOrEmpty(Model.Category))
+        @if (Model.Category != null)
         {
-            <span style="background:#e0e7ff; color:#3730a3; padding:1px 6px; border-radius:3px; font-size:0.8em; margin-left:6px;">@Model.Category</span>
+            <span class="badge badge-category">@Model.Category.Name</span>
         }
         @if (Model.DueDate.HasValue)
         {
-            <span style="background:#fff3cd; color:#856404; padding:1px 6px; border-radius:3px; font-size:0.8em; margin-left:6px;">📅 @Model.DueDate.Value.ToString("dd.MM.yyyy")</span>
+            <span class="badge badge-date">📅 @Model.DueDate.Value.ToString("dd.MM.yyyy")</span>
         }
         <br>
-        <small style="color:#888;">Создано: @Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+        <span class="task-meta">Создано: @Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</span>
     </div>
-    <a asp-page="/Tasks/Edit" asp-route-id="@Model.Id" style="color:#007bff; text-decoration:none; font-size:0.85em; padding:4px 8px; border:1px solid #007bff; border-radius:3px;" title="Редактировать">✎</a>
-    <button class="delete-btn" onclick="deleteTask(@Model.Id)" title="Удалить через AJAX">✕</button>
+    <a asp-page="/Tasks/Edit" asp-route-id="@Model.Id" class="edit-link" title="Редактировать">✎</a>
+    <button class="delete-btn" onclick="deleteTask(@Model.Id)" title="Удалить">✕</button>
     <form method="post" asp-page-handler="Delete" asp-route-id="@Model.Id" class="inline-form">
-        <button type="submit" class="delete-btn" style="font-size:0.75em; padding:2px 6px;" title="Классическое удаление">Del</button>
+        <button type="submit" class="delete-btn btn-secondary" style="font-size:0.75em; padding:6px 10px;" title="Удалить">Del</button>
     </form>
 </li>

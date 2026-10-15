@@ -17,8 +17,8 @@
         const response = await fetch(`/api/sum?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`);
         const data = await response.json();
         const el = document.getElementById('sumResult');
-        if (response.ok) { el.textContent = `Результат: ${data.result}`; el.className = 'success'; }
-        else { el.textContent = `Ошибка: ${data.error}`; el.className = 'error'; }
+        if (response.ok) { el.textContent = `Результат: ${data.result}`; el.className = 'badge badge-success'; }
+        else { el.textContent = `Ошибка: ${data.error}`; el.className = 'badge badge-danger'; }
     }
     async function getDivide() {
         const a = document.getElementById('divA').value;
@@ -26,8 +26,8 @@
         const response = await fetch(`/api/divide?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`);
         const data = await response.json();
         const el = document.getElementById('divResult');
-        if (response.ok) { el.textContent = `Результат: ${data.result}`; el.className = 'success'; }
-        else { el.textContent = `Ошибка: ${data.error}`; el.className = 'error'; }
+        if (response.ok) { el.textContent = `Результат: ${data.result}`; el.className = 'badge badge-success'; }
+        else { el.textContent = `Ошибка: ${data.error.message}`; el.className = 'badge badge-danger'; }
     }
     async function postEcho() {
         const text = document.getElementById('echoText').value;
@@ -43,27 +43,48 @@
 }
 
 <section>
-    <h2>1. Информация о сервере</h2>
-    <button onclick="getServerInfo()">Получить информацию</button>
-    <pre id="result">Загрузка данных API...</pre>
+    <h2>Информация о сервере</h2>
+    <button onclick="getServerInfo()">Получить</button>
+    <pre id="result" style="margin-top: 16px;">Загрузка...</pre>
 </section>
+
 <section>
-    <h2>2. Калькулятор суммы</h2>
-    <input type="number" id="sumA" placeholder="Число A" step="any">
-    <input type="number" id="sumB" placeholder="Число B" step="any">
-    <button onclick="getSum()">Вычислить</button>
-    <p id="sumResult"></p>
+    <h2>Калькулятор суммы</h2>
+    <div class="form-row">
+        <div class="form-group">
+            <input type="number" id="sumA" placeholder="Число A" step="any" />
+        </div>
+        <div class="form-group">
+            <input type="number" id="sumB" placeholder="Число B" step="any" />
+        </div>
+        <div>
+            <button onclick="getSum()">Сложить</button>
+        </div>
+    </div>
+    <p id="sumResult" style="margin-top: 12px;"></p>
 </section>
+
 <section>
-    <h2>3. Калькулятор деления (с обработкой ошибок)</h2>
-    <input type="number" id="divA" placeholder="Число A" step="any">
-    <input type="number" id="divB" placeholder="Число B" step="any">
-    <button onclick="getDivide()">Разделить</button>
-    <p id="divResult"></p>
+    <h2>Калькулятор деления</h2>
+    <div class="form-row">
+        <div class="form-group">
+            <input type="number" id="divA" placeholder="Число A" step="any" />
+        </div>
+        <div class="form-group">
+            <input type="number" id="divB" placeholder="Число B" step="any" />
+        </div>
+        <div>
+            <button onclick="getDivide()">Разделить</button>
+        </div>
+    </div>
+    <p id="divResult" style="margin-top: 12px;"></p>
 </section>
+
 <section>
-    <h2>4. Echo (POST запрос)</h2>
-    <textarea id="echoText" placeholder="Введите текст для отправки на сервер" rows="3" style="width: 100%;"></textarea><br>
-    <button onclick="postEcho()">Отправить на сервер</button>
-    <pre id="echoResult">Результат запроса здесь...</pre>
+    <h2>Echo (POST запрос)</h2>
+    <div class="form-group">
+        <textarea id="echoText" placeholder="Введите текст для отправки" rows="3"></textarea>
+    </div>
+    <button onclick="postEcho()">Отправить</button>
+    <pre id="echoResult" style="margin-top: 16px;">Результат...</pre>
 </section>

@@ -20,7 +20,6 @@ public class CategoriesModel : PageModel
     [BindProperty]
     public Category NewCategory { get; set; } = new();
 
-    // Нагрузка всех категорий с количеством связанных задач
     public async Task OnGet()
     {
         Categories = await _db.Categories
@@ -34,19 +33,11 @@ public class CategoriesModel : PageModel
             .ToListAsync();
     }
 
-    // Добавление новой категории
     public async Task<IActionResult> OnPost()
     {
-        if (!ModelState.IsValid)
-        {
-            return Page();
-        }
+        if (!ModelState.IsValid) return Page();
 
-        var category = new Category
-        {
-            Name = NewCategory.Name.Trim(),
-            Tasks = new List<TaskItem>()
-        };
+        var category = new Category { Name = NewCategory.Name.Trim(), Tasks = new List<TaskItem>() };
         _db.Categories.Add(category);
         await _db.SaveChangesAsync();
 
@@ -54,7 +45,6 @@ public class CategoriesModel : PageModel
         return RedirectToPage();
     }
 
-    // Удаление категории (Задача 11)
     public async Task<IActionResult> OnPostDelete(int id)
     {
         var category = await _db.Categories.FindAsync(id);
@@ -65,8 +55,6 @@ public class CategoriesModel : PageModel
         }
 
         string categoryName = category.Name;
-        
-        // При удалении задачи получают CategoryId = null (благодаря OnDelete(DeleteBehavior.SetNull))
         _db.Categories.Remove(category);
         await _db.SaveChangesAsync();
 
@@ -74,7 +62,6 @@ public class CategoriesModel : PageModel
         return RedirectToPage();
     }
 
-    // ViewModel для отображения категории с количеством задач
     public class CategoryItemViewModel
     {
         public int Id { get; set; }

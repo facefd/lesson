@@ -23,11 +23,10 @@ namespace lesson2.Models
                 entity.Property(e => e.CategoryId).HasColumnName("CategoryId");
                 entity.Property(e => e.DueDate).HasColumnType("datetime");
                 
-                // Задача 11: поведение при удалении категории — SET NULL (не удалять задачи!)
                 entity.HasOne(t => t.Category)
                     .WithMany(c => c.Tasks)
                     .HasForeignKey(t => t.CategoryId)
-                    .OnDelete(DeleteBehavior.SetNull); // ✅ При удалении категории у задач CategoryId станет null
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<Category>(entity =>
@@ -36,7 +35,6 @@ namespace lesson2.Models
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
             });
 
-            // Задача 3: стартовые категории через HasData (seed data)
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 1, Name = "Работа" },
                 new Category { Id = 2, Name = "Учёба" },
